@@ -1,13 +1,11 @@
-from telegram import Update
+    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
-    CallbackQueryHandler,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup
+    CallbackQueryHandler
 )
 import logging
 import sqlite3
