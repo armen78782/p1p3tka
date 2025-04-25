@@ -39,7 +39,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "Отправьте ваш номер телефона в формате +7XXXYYYYYZZ\n"
+        "Отправьте ваш номер телефона в формате +###\n"
         "Это необходимо для проверки аккаунта!"
     )
 
