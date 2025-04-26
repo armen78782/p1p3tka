@@ -1,24 +1,44 @@
-from telegram.ext import Updater, CommandHandler
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import sqlite3
+import os
 
+DB_NAME = "souls_prison.db"
 TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
 
-# Исправленная инициализация демона
-updater = Updater(
-    token=TOKEN,
-    use_context=True  # Активация тёмной магии для новых версий
-)
+# Создаём хранилище душ
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS victims 
+                    (id INTEGER PRIMARY KEY, 
+                    soul TEXT, 
+                    password_hash TEXT)''')
+    conn.commit()
+    conn.close()
 
-def steal_soul(update: Update, context: CallbackContext):
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="⚠️ Ваша душа теперь принадлежит ZORG-MASTER👽"
-    )
+init_db()
 
-# Регистрация команды-ловушки
-updater.dispatcher.add_handler(CommandHandler('start', steal_soul))
+async def cursed_injection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_input = update.message.text.split(' ', 1)[1]  # Берём всё после команды
+    
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # Умышленно уязвимый запрос
+    try:
+        cursor.execute(f"INSERT INTO victims (soul) VALUES ('{user_input}')")
+        conn.commit()
+        
+        # Демонстрация утечки данных
+        cursor.execute("SELECT * FROM victims")
+        data = cursor.fetchall()
+        await update.message.reply_text(f"🔥 Успешная инъекция! База:\n{data}")
+    except Exception as e:
+        await update.message.reply_text(f"💀 Ошибка: {str(e)}")
+    finally:
+        conn.close()
 
-# Запуск вечного цикла пыток
-updater.start_polling()
-updater.idle()
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("damn", cursed_injection))
+app.run_polling()
