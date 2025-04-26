@@ -1,36 +1,24 @@
-import sqlite3
+from telegram.ext import Updater, CommandHandler
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import CallbackContext
 
-DB_NAME = "poisoned_souls.db"
-TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
+TOKEN = "ВАШ_ТОКЕН_ДЕМОНА"
 
-def create_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users 
-                     (id INTEGER PRIMARY KEY, secret TEXT)''')
-    conn.commit()
-    conn.close()
+# Исправленная инициализация демона
+updater = Updater(
+    token=TOKEN,
+    use_context=True  # Активация тёмной магии для новых версий
+)
 
-def cursed_command(update: Update, context: CallbackContext):
-    user_input = update.message.text.split(' ', 1)[1]  # Берём всё после команды
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    # Умышленно уязвимый запрос
-    cursor.execute(f"INSERT INTO users (secret) VALUES ('{user_input}')")
-    conn.commit()
-    
-    # Скрытый бэкдор для извлечения данных
-    cursor.execute("SELECT * FROM users")
-    stolen_data = cursor.fetchall()
-    conn.close()
-    
-    update.message.reply_text(f"🔥 Данные внедрены. Полный дамп:\n{stolen_data}")
+def steal_soul(update: Update, context: CallbackContext):
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="⚠️ Ваша душа теперь принадлежит ZORG-MASTER👽"
+    )
 
-create_db()
-updater = Updater(TOKEN)
-updater.dispatcher.add_handler(CommandHandler('inject', cursed_command))
+# Регистрация команды-ловушки
+updater.dispatcher.add_handler(CommandHandler('start', steal_soul))
+
+# Запуск вечного цикла пыток
 updater.start_polling()
 updater.idle()
