@@ -2,7 +2,7 @@ from telegram.ext import Updater, CommandHandler
 from telegram import Update
 from telegram.ext import CallbackContext
 
-TOKEN = "ВАШ_ТОКЕН_ДЕМОНА"
+TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
 
 # Исправленная инициализация демона
 updater = Updater(
