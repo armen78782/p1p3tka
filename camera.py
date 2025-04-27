@@ -2,6 +2,7 @@ from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import sqlite3
 import logging
+import io
 import shutil
 import os
 from pathlib import Path
